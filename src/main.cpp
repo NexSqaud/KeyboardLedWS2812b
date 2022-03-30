@@ -14,81 +14,18 @@ std::array<Adafruit_NeoPixel, 6> lines{
 };
 
 LedControl<6> control(lines);
-LedControlState lastState;
-
-void timerCallback()
-{
-  control.UpdateEffect();
-}
-
-void saveCallback()
-{
-  LedControlState state = control.SaveState();
-  if (state == lastState)
-  {
-    return;
-  }
-
-  EEPROM.put(0, 0xF0F0F0F0);
-  EEPROM.put(4, state.Type);
-  if (state.Type == 0)
-  {
-    EEPROM.put(5, state.ArraySize);
-    for (int i = 0; i < state.ArraySize; i++)
-    {
-      EEPROM.put(9 + (i * sizeof(Pixel)), state.Pixels[i]);
-    }
-  }
-  else
-  {
-    EEPROM.put(5, state.EffectIndex);
-  }
-  EEPROM.commit();
-}
 
 void setup()
 {
   Serial.begin(115200);
   pinMode(PC13, OUTPUT);
-  digitalWrite(PC13, HIGH);
-  HardwareTimer* timer = new HardwareTimer(TIM1);
-  timer->setOverflow(30, TimerFormat_t::HERTZ_FORMAT);
-  timer->attachInterrupt(timerCallback);
-  timer->resume();
 
-  int sign = 0;
-  EEPROM.get(0, sign);
-  if (sign == 0xF0F0F0F0)
-  {
-    LedControlState state;
-    EEPROM.get(4, state.Type);
-    if (state.Type == 0)
-    {
-      EEPROM.get(5, state.ArraySize);
-      for (int i = 0; i < state.ArraySize; i++)
-      {
-        Pixel pixel;
-        EEPROM.get(9 + (i * sizeof(Pixel)), pixel);
-      }
-    }
-    else
-    {
-      EEPROM.get(5, state.EffectIndex);
-    }
-
-    control.LoadState(state);
-  }
-
-  HardwareTimer* saveTimer = new HardwareTimer(TIM2);
-  saveTimer->setOverflow(10 * 1000 * 1000, TimerFormat_t::MICROSEC_FORMAT);
-  saveTimer->attachInterrupt(saveCallback);
-  saveTimer->resume();
+  control.Fill(Color{ .Red = 10, .Green = 60, .Blue = 10 });
 }
 
 void loop()
 {
-  digitalWrite(PC13, HIGH);
-  if (Serial.available())
+  if (Serial.available() > 0)
   {
     int type = Serial.read() - '0';
     switch (type)
@@ -138,7 +75,7 @@ void loop()
     }
     case 3:
     {
-      auto packet = EffectPacket(Serial.read());
+      auto packet = ClearPacket();
       packet.Apply(control);
       break;
     }
@@ -150,12 +87,16 @@ void loop()
     }
     case 5:
     {
-      Serial.write("ok!");
+      Serial.write("ok");
       break;
     }
+    default:
+    {
+      return;
     }
-    Serial.write("!");
+    Serial.write("!\n");
+    Serial.flush();
+    }
   }
-  digitalWrite(PC13, LOW);
-  delay(100);
+  delay(1000 / 30);
 }
