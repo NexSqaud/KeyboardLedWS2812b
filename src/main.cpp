@@ -20,7 +20,7 @@ void setup()
   Serial.begin(115200);
   pinMode(PC13, OUTPUT);
 
-  control.Fill(Color{ .Red = 10, .Green = 60, .Blue = 10 });
+  control.Fill(Color{ .Red = 10, .Green = 80, .Blue = 10 });
 }
 
 void loop()
@@ -94,9 +94,9 @@ void loop()
     {
       return;
     }
+    }
     Serial.write("!\n");
     Serial.flush();
-    }
   }
   delay(1000 / 30);
 }
