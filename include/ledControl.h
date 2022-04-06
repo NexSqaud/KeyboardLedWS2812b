@@ -32,6 +32,7 @@ struct LinePacket
     void Apply(LedControl<LinesCount>& ledControl)
     {
         ledControl.FillLine(LineIndex, FillColor);
+        ledControl.ShowPixelsBuffer();
     }
 };
 
@@ -64,6 +65,7 @@ struct FillPacket
     void Apply(LedControl<LinesCount>& ledControl)
     {
         ledControl.Fill(FillColor);
+        ledControl.ShowPixelsBuffer();
     }
 };
 
@@ -93,11 +95,16 @@ struct SettingsPacket
     }
 };
 
-struct LedControlState {
-    uint8_t Type;
-    int EffectIndex;
-    int ArraySize;
-    std::vector<Pixel> Pixels;
+struct ShowBufferPacket
+{
+    ShowBufferPacket()
+    {}
+
+    template <int LinesCount>
+    void Apply(LedControl<LinesCount>& ledControl)
+    {
+        ledControl.ShowPixelsBuffer();
+    }
 };
 
 template <int LinesCount>
@@ -131,7 +138,6 @@ public:
         }
 
         Lines[line].setPixelColor(pixel, color.Red, color.Green, color.Blue);
-        Lines[line].show();
     }
 
     void FillLine(int line, Color color)
@@ -145,8 +151,6 @@ public:
         {
             Lines[line].setPixelColor(i, color.Red, color.Green, color.Blue);
         }
-
-        Lines[line].show();
     }
 
     void Fill(Color color)
@@ -158,12 +162,14 @@ public:
                 {
                     line.setPixelColor(i, color.Red, color.Green, color.Blue);
                 }
-
-                line.show();
             }
         );
     }
 
+    void ShowPixelsBuffer()
+    {
+        IterateLines([](Adafruit_NeoPixel& line, int) { line.show(); });
+    }
 
     void ClearPixel(int line, int pixel)
     {

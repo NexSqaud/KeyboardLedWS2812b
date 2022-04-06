@@ -21,6 +21,7 @@ void setup()
   pinMode(PC13, OUTPUT);
 
   control.Fill(Color{ .Red = 10, .Green = 80, .Blue = 10 });
+  control.ShowPixelsBuffer();
 }
 
 void loop()
@@ -90,6 +91,12 @@ void loop()
       Serial.write("ok");
       break;
     }
+    case 6:
+    {
+      auto packet = ShowBufferPacket();
+      packet.Apply(control);
+      break;
+    }
     default:
     {
       return;
@@ -98,5 +105,5 @@ void loop()
     Serial.write("!\n");
     Serial.flush();
   }
-  delay(1000 / 30);
+  delay(1);
 }
